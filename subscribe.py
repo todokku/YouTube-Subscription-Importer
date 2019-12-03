@@ -100,8 +100,11 @@ def get_channels_list():
             # channel_ids.append(channel_id)
         elif channel_id not in stored_file_txt:
             channels[channel_id] = channel_name
+            print('\nAdding channel: %s %s\n\n' % (channel_id, channel_name))
         else:
             print('Skipping channel: %s %s\n' % (channel_id, channel_name))
+
+    print('Total channels to import: %s' % len(channels))
     return channels
 
 
