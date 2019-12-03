@@ -1,0 +1,8 @@
+subscriptions.xml
+.DS_Store
+client_secrets.json
+subscribe.py-oauth2.json
+env
+channels_subscribed.txt
+BANNED_channels_subscribed.txt
+.idea
