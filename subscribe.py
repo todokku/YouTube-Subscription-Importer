@@ -57,6 +57,7 @@ STORED_CHANNEL_FILE_NAME = 'channels_subscribed.txt'
 
 STORED_BANNED_CHANNEL_FILE_NAME = 'BANNED_channels_subscribed.txt'
 
+TOTAL = 0
 
 def get_authenticated_service(args):
     flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
@@ -100,17 +101,22 @@ def get_channels_list():
             # channel_ids.append(channel_id)
         elif channel_id not in stored_file_txt:
             channels[channel_id] = channel_name
-            print('\nAdding channel: %s %s\n\n' % (channel_id, channel_name))
+            print('Adding channel: %s %s\n\n' % (channel_id, channel_name))
         else:
-            print('Skipping channel: %s %s\n' % (channel_id, channel_name))
-
-    print('Total channels to import: %s' % len(channels))
+            print('Already added channel\n')
+    global TOTAL
+    TOTAL = len(channels)
+    print('Total channels to import: %s' % TOTAL)
     return channels
 
 
 # This method calls the API's youtube.subscriptions.insert method to add a
 # subscription to the specified channel.
 def add_subscription(youtube, channel_id):
+    global TOTAL
+    print(TOTAL)
+    TOTAL -= 1
+
     add_subscription_response = youtube.subscriptions().insert(
         part='snippet',
         body=dict(
@@ -151,6 +157,7 @@ if __name__ == "__main__":
     # We have all channel ids, lets subscribe now
     for key, value in channels.items():
         try:
+            print("Impoting: %s \n%s" % (key, value), end='\n')
             channel_title = add_subscription(youtube, key)
 
         except HttpError as e:
