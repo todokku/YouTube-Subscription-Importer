@@ -101,7 +101,7 @@ def get_channels_list():
             # channel_ids.append(channel_id)
         elif channel_id not in stored_file_txt:
             channels[channel_id] = channel_name
-            print('Adding channel: %s %s\n\n' % (channel_id, channel_name))
+            # print('Adding channel: %s %s\n\n' % (channel_id, channel_name))
         else:
             print('Already added channel\n')
     global TOTAL
@@ -161,13 +161,6 @@ if __name__ == "__main__":
             channel_title = add_subscription(youtube, key)
 
         except HttpError as e:
-            # print(youtube, channel_id)
-            # print(e.content.decode('utf-8'))
-            # exit(0)
-
-            # print(key + value)
-            # print(e.content.decode('utf-8'))
-
             error_domain = eval(e.content.decode(
                 'utf-8'))['error']['errors'][0]['domain']
             reason = eval(e.content.decode(
