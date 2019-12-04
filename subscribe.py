@@ -107,6 +107,7 @@ def get_channels_list():
     global TOTAL
     TOTAL = len(channels)
     print('Total channels to import: %s' % TOTAL)
+    print('%s' % channels)
     return channels
 
 
