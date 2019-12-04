@@ -1,0 +1,132 @@
+# <?php
+#
+#     require_once 'php-google-api-client/src/Google_Client.php';
+#     require_once 'php-google-api-client/src/Google_YouTubeService.php';
+#
+#     session_start();
+#
+#     $OAUTH2_CLIENT_ID = 'apps.googleusercontent.com';
+#     $OAUTH2_CLIENT_SECRET = 'labnol';
+#
+#     $redirect = "http://ctrlq.org/youtube/playlists/";
+#
+#     $client = new Google_Client();
+#     $client->setClientId($OAUTH2_CLIENT_ID);
+#     $client->setClientSecret($OAUTH2_CLIENT_SECRET);
+#     $client->setRedirectUri($redirect);
+#
+#     $youtube = new Google_YoutubeService($client);
+#
+#     if (isset($_GET['code'])) {
+#
+#         if (strval($_SESSION['state']) !== strval($_GET['state'])) {
+#             die('The session state did not match.');
+#         }
+#
+#         $client->authenticate();
+#         $_SESSION['token'] = $client->getAccessToken();
+#         header('Location: ' . $redirect);
+#
+#     }
+#
+#     if (isset($_SESSION['token'])) {
+#         $client->setAccessToken($_SESSION['token']);
+#     }
+#
+#     if ($client->getAccessToken()) {
+#
+#             try {
+#
+#                 if ( preg_match('/(PL[A-Za-z0-9_-]+)/', $_POST["url"], $match) ) {
+#
+#                     $plID = $match[0];
+#                     $pl_options = array ("id" => $plID, "maxResults" => 1);
+#                     $playlistDetails = $youtube->playlists->listPlaylists("snippet", $pl_options);
+#
+#                     if ( $playlistDetails["pageInfo"]["totalResults"] == 1 ) {
+#
+#                         $options = array ("playlistId" => $plID, "maxResults" => 50);
+#                         $videos = "";
+#
+#                         do {
+#
+#                             $playlist = $youtube->playlistItems->listPlaylistItems("snippet", $options);
+#                             $nextPageToken = $playlist["nextPageToken"];
+#                             $options["pageToken"] = $nextPageToken;
+#
+#                             foreach ($playlist["items"] as $playlistItem) {
+#                                 $videos .=  $playlistItem["snippet"]["resourceId"]["videoId"] . "#";
+#                             }
+#
+#                         } while ($nextPageToken);
+#
+#                         $playlistSnippet = new Google_PlaylistSnippet();
+#                         $playlistSnippet->setTitle($playlistDetails["items"][0]["snippet"]["title"]);
+#
+#                         $playlistStatus = new Google_PlaylistStatus();
+#                         $playlistStatus->setPrivacyStatus('private');
+#
+#                         $youTubePlaylist = new Google_Playlist();
+#                         $youTubePlaylist->setSnippet($playlistSnippet);
+#                         $youTubePlaylist->setStatus($playlistStatus);
+#
+#                         $playlistResponse = $youtube->playlists->insert('snippet,status', $youTubePlaylist, array());
+#
+#                         $ids = explode ( "#", $videos ) ;
+#
+#                         for ($i=0; $i<count($ids); $i++) {
+#
+#                             $resourceId = new Google_ResourceId();
+#                             $resourceId->setVideoId($ids[$i]);
+#                             $resourceId->setKind('youtube#video');
+#
+#                             $playlistItemSnippet = new Google_PlaylistItemSnippet();
+#                             $playlistItemSnippet->setPlaylistId($playlistResponse['id']);
+#                             $playlistItemSnippet->setResourceId($resourceId);
+#
+#                             $playlistItem = new Google_PlaylistItem();
+#                             $playlistItem->setSnippet($playlistItemSnippet);
+#
+#                             $playlistItemResponse = $youtube->playlistItems->insert('snippet,contentDetails', $playlistItem, array());
+#
+#                         }
+#
+#                     }
+#
+#                 }
+#
+#             } catch (Google_ServiceException $e) {
+#                 $htmlBody .= sprintf('<p>A service error occurred: <code>%s</code></p>',
+#                 htmlspecialchars($e->getMessage()));
+#             } catch (Google_Exception $e) {
+#                 $htmlBody .= sprintf('<p>An client error occurred: <code>%s</code></p>',
+#                 htmlspecialchars($e->getMessage()));
+#             }
+#
+#         } else {
+#
+#             $htmlBody = <<<END
+#     <form method="post">
+#       <input type="text" name="url" id="url">
+#       <button type="submit">Copy Playlist to YouTube</button>
+#     </form>
+# END;
+#
+#         }
+#
+#         $_SESSION['token'] = $client->getAccessToken();
+#
+#     } else {
+#
+#         $state = mt_rand();
+#         $client->setState($state);
+#         $_SESSION['state'] = $state;
+#
+#         $authUrl = $client->createAuthUrl();
+#         $htmlBody = <<<END
+#                 <p><a href="$authUrl">Step 1: Sign-in with YouTube</a></p>
+# END;
+#     }
+# ?>
+#
+# <?= $htmlBody; ?>

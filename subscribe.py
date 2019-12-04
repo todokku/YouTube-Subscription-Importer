@@ -90,24 +90,35 @@ def get_channels_list():
     start = xmldoc.getroot()[0][0]
 
     channels = {}
-
+    banned = []
     for child in start:
         channel_id = child.get('xmlUrl')[START_OF_CHANNEL_ID:]
         channel_name = child.get('title')
-        print('Testing: %s.%s' % (channel_id, channel_name))
 
-        if channel_id+"."+channel_name in banned_stored_file_txt:
-            print('Banned channel: %s.%s\n' % (channel_id, channel_name))
-            # channel_ids.append(channel_id)
+        if channel_id+"."+channel_name in banned_stored_file_txt and channel_name!='':
+            #  print('Banned channel: %s.%s\n'% (channel_id, channel_name))
+            # channel_ids.append
+            # print('Testing: %s.%s' % (channel_id, channel_name))
+            # print('Banned.\n')
+            banned.append(channel_name)
+            pass
         elif channel_id not in stored_file_txt:
             channels[channel_id] = channel_name
-            # print('Adding channel: %s %s\n\n' % (channel_id, channel_name))
+            # print('Added to the array \n' )
         else:
-            print('Already added channel\n')
+            # print('Already added.\n')
+            pass
+
+    if banned:
+        print('These are banned channels. Find and add them manually.')
+        for value in banned:
+            print('%s' % value)
+
     global TOTAL
     TOTAL = len(channels)
-    print('Total channels to import: %s' % TOTAL)
-    print('%s' % channels)
+    print('\nTotal channels to import: %s' % TOTAL)
+    for key, value in channels.items():
+        print('%s %s' % (key,value))
     return channels
 
 
@@ -158,7 +169,7 @@ if __name__ == "__main__":
     # We have all channel ids, lets subscribe now
     for key, value in channels.items():
         try:
-            print("Impoting: %s \n%s" % (key, value), end='\n')
+            print("\nImpoting: %s %s" % (key, value), end='\n')
             channel_title = add_subscription(youtube, key)
 
         except HttpError as e:
@@ -169,13 +180,15 @@ if __name__ == "__main__":
             code = eval(e.content.decode(
                 'utf-8'))['error']['code']
 
-            if error_domain == 'youtube.subscription' and reason == "subscriptionForbidden" or error_domain == 'youtube.quota':
+            if error_domain == 'youtube.quota' or code == 400:
                 print('\nSubscription quota has been reached.\n' +
-                      'All subscribed channels were saved to channels_subscribed.txt.\nTry again at a later time...')
+                      'All subscribed channels were saved to channels_subscribed.txt.\n'
+                      'All banned channels were saved to banned_subscribed.txt.\n Try again at a later time...')
+                # print(e.content.decode('utf-8'))
                 exit(0)
             elif code == 404 and reason == "publisherNotFound":
                 # print(e.content.decode('utf-8'))
-                print("\nCannot be found: %s \n %s" % (key, value), end='\n')
+                print("Cannot be found: %s '%s'. Dead =(" % (key, value), end='\n')
 
                 with open(STORED_BANNED_CHANNEL_FILE_NAME, mode='a+', encoding='utf-8') as ids_file:
                     # Write info message for file if not already written
